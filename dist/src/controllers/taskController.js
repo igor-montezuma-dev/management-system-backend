@@ -26,7 +26,7 @@ const getTasks = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
                 attachments: true,
             },
         });
-        res.json(tasks);
+        res.status(200).json(tasks);
     }
     catch (error) {
         console.error(error);

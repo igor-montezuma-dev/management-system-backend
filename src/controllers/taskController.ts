@@ -18,7 +18,7 @@ export const getTasks = async (req: Request, res: Response): Promise<void> => {
         attachments: true,
       },
     });
-    res.json(tasks);
+    res.status(200).json(tasks);
   } catch (error: any) {
     console.error(error);
     res

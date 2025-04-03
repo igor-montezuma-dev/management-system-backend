@@ -9,7 +9,7 @@ export const getProjects = async (
 ): Promise<void> => {
   try {
     const projects = await prisma.project.findMany();
-    res.json(projects);
+    res.status(200).json(projects);
   } catch (error: any) {
     console.error(error);
     res.status(500).json({ error: `Error retrieving projects: ${error.message}` });
