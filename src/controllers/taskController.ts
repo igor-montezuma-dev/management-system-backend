@@ -1,11 +1,10 @@
-import { PrismaClient } from "@prisma/client";
 import { Request, Response } from "express";
+import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
 export const getTasks = async (req: Request, res: Response): Promise<void> => {
   const { projectId } = req.query;
-
   try {
     const tasks = await prisma.task.findMany({
       where: {
@@ -18,16 +17,15 @@ export const getTasks = async (req: Request, res: Response): Promise<void> => {
         attachments: true,
       },
     });
-    res.status(200).json(tasks);
+    res.json(tasks);
   } catch (error: any) {
-    console.error(error);
     res
       .status(500)
-      .json({ error: `Error retrieving tasks : ${error.message}` });
+      .json({ message: `Error retrieving tasks: ${error.message}` });
   }
 };
 
-export const createtask = async (
+export const createTask = async (
   req: Request,
   res: Response
 ): Promise<void> => {
@@ -44,6 +42,7 @@ export const createtask = async (
     authorUserId,
     assignedUserId,
   } = req.body;
+
   try {
     const newTask = await prisma.task.create({
       data: {
@@ -62,8 +61,13 @@ export const createtask = async (
     });
     res.status(201).json(newTask);
   } catch (error: any) {
-    console.error(error);
-    res.status(500).json({ error: `Error creating a task ${error.message}` });
+    if (error.code === "P2002") {
+      res.status(400).json({ message: "Unique constraint failed on the field: id" });
+    } else {
+      res
+        .status(500)
+        .json({ message: `Error creating a task: ${error.message}` });
+    }
   }
 };
 
@@ -73,7 +77,6 @@ export const updateTaskStatus = async (
 ): Promise<void> => {
   const { taskId } = req.params;
   const { status } = req.body;
-
   try {
     const updatedTask = await prisma.task.update({
       where: {
@@ -85,9 +88,32 @@ export const updateTaskStatus = async (
     });
     res.json(updatedTask);
   } catch (error: any) {
-    console.error(error);
+    res.status(500).json({ message: `Error updating task: ${error.message}` });
+  }
+};
+
+export const getUserTasks = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  const { userId } = req.params;
+  try {
+    const tasks = await prisma.task.findMany({
+      where: {
+        OR: [
+          { authorUserId: Number(userId) },
+          { assignedUserId: Number(userId) },
+        ],
+      },
+      include: {
+        author: true,
+        assignee: true,
+      },
+    });
+    res.json(tasks);
+  } catch (error: any) {
     res
       .status(500)
-      .json({ error: `Error updating task: ${error.message}` });
+      .json({ message: `Error retrieving user's tasks: ${error.message}` });
   }
 };
